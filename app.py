@@ -4,6 +4,9 @@ import streamlit as st
 import numpy as np
 from scipy import stats
 from PIL import Image
+import datetime as dt
+import time
+import random
 
 
 co2_df1 = pd.read_csv("abi-rm3-carbon-dioxide-co_abi-.csv")
@@ -59,16 +62,17 @@ temp = pd.Series(temp_df1.values.ravel('F'))
 humi = pd.Series(hum_df1.values.ravel('F'))
 
 image = Image.open('Senseware_Logo.jpg')
+st.set_page_config(layout="wide")
 st.image(image)
 st.title('Senseware Data App')
-st.write(co2_df1.head())
-st.caption('Viewing co2_df1.head()')
+#st.write(co2_df1.head())
+#st.caption('Viewing co2_df1.head()')
 
 with st.form(key='my_form'):
     co2_input = st.number_input(label='Enter CO2 value (ppm)', min_value=float(1), max_value=float(10000))
-    pm10_input = st.number_input(label='Enter PM 1.0 concentration value value', min_value=float(1), max_value=float(10000))
-    pm25_input = st.number_input(label='Enter PM 2.5 concentration value value', min_value=float(1), max_value=float(10000))
-    voc_input = st.number_input(label='Enter VOC value (ppb)', min_value=float(1), max_value=float(10000))
+    pm10_input = st.number_input(label='Enter PM 1.0 concentration value value', min_value=float(0.01), max_value=float(10000))
+    pm25_input = st.number_input(label='Enter PM 2.5 concentration value value', min_value=float(0.01), max_value=float(10000))
+    voc_input = st.number_input(label='Enter VOC value (ppb)', min_value=float(0.1), max_value=float(10000))
     temp_input = st.number_input(label='Enter temperature value (°F)', min_value=float(-60), max_value=float(160))
     humi_input = st.number_input(label='Enter humidity value (ppm)', min_value=float(0.1), max_value=float(100))
     submit_button = st.form_submit_button(label='Submit')
@@ -116,3 +120,38 @@ if submit_button:
         st.success(f"your humidity iaq reading of {humi_input} is in the top {percentage_humi}% of buildings!")
     if percentage_humi < 50:
         st.error(f"your humidity iaq reading of {humi_input} is worse than {np.abs(percentage_humi - 100)}% of buildings.")
+
+datalst = []
+testdf1 = co2_df1.head(2)
+testdf1 = testdf1.reset_index()
+st.write("Incoming CO2 Data: ")
+
+while len(datalst) < 50:
+    datapoint = [time.strftime('%Y-%m-%d %H:%M:%S')] + [random.randint(400, 600) for x in range(11)]
+    placeholder = st.empty()
+    placeholder1 = st.empty()
+    time.sleep(1)
+    with placeholder1.container():
+        col1, col2 = st.columns([1, 1])
+        col1.markdown(datapoint)
+        col2.write("Data compared to CO2 distribution")
+        for i in datapoint[1:]:
+            ptile_co2x = stats.percentileofscore(co2, i)
+            percentage_co2x = round(100 - ptile_co2x)
+
+            if percentage_co2x >= 50:
+                col2.success(f"CO2 iaq reading of {i} ppm is in the top {percentage_co2x}% of buildings!")
+            if percentage_co2x < 50:
+                col2.error(
+                    f"CO2 iaq reading of {i} ppm is worse than {np.abs(percentage_co2x - 100)}% of buildings.")
+            time.sleep(1)
+    time.sleep(5)
+    col2.empty()
+    placeholder.empty()
+    placeholder1.empty()
+    datalst.append(datapoint)
+
+
+"""    if len(datalst) > 5:
+        testdf1.loc[len(testdf1)] = datalst[-1:-6]
+    st.write(testdf1.tail())"""

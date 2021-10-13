@@ -1,0 +1,1 @@
+"https://share.streamlit.io/zizx/sensors/main/app.py"
